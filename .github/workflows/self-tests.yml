@@ -1,0 +1,38 @@
+name: Self-tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # These checks install nothing and never touch a real Discord or source checkout.
+      - name: Run self-tests
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $tests = @(
+            @("-STA", "-File", ".\VencordEquicordBuilder.ps1", "-SelfTest"),
+            @("-STA", "-File", ".\VencordEquicordBuilder.ps1", "-StartupSelfTest"),
+            @("-STA", "-File", ".\Test-Prerequisites.ps1"),
+            @("-File", ".\Test-Settings.ps1"),
+            @("-STA", "-File", ".\Test-BuildTracking.ps1"),
+            @("-File", ".\Test-ProcessRunner.ps1"),
+            @("-File", ".\Test-InjectionRepair.ps1"),
+            @("-File", ".\Test-SafeSourceUpdate.ps1"),
+            @("-File", ".\InstallGit.ps1", "-SelfTest"),
+            @("-File", ".\InstallNodeLts.ps1", "-SelfTest")
+          )
+          $failed = 0
+          foreach ($test in $tests) {
+            Write-Host "::group::$($test -join ' ')"
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass @test
+            $code = $LASTEXITCODE
+            Write-Host "::endgroup::"
+            if ($code -ne 0) { Write-Host "::error::$($test -join ' ') failed with exit code $code"; $failed++ }
+          }
+          if ($failed -gt 0) { exit 1 }

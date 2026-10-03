@@ -1,0 +1,11 @@
+# Legacy per-folder settings (current settings live in %LOCALAPPDATA%\CordBuilder)
+builder.settings.json
+
+# Temporary and generated files
+*.tmp
+*.log
+preview*.png
+
+# Windows shell metadata
+Thumbs.db
+desktop.ini
